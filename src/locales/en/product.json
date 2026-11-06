@@ -1,0 +1,8 @@
+{
+  "title": "Product details",
+  "description": "Description",
+  "quantity": "Quantity",
+  "addToCart": "Add to cart",
+  "outOfStock": "Out of stock",
+  "relatedProducts": "You may also like"
+}

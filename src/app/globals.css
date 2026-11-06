@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-primary: #338a43;
+  --color-orange: #ff8531;
+  --color-dark: #161616;
+  --color-neutral-500: #64748b;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-200: #eeeeee;
+  --color-neutral-100: #f5f5f5;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Scrollbar hide utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Base body styles */
+body {
+  color: var(--color-dark);
+  background: #ffffff;
+}
+
+/* =========================================
+   Shimmer — YouTube-style skeleton animation
+   ========================================= */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-shimmer {
+  animation: shimmer 1.6s infinite;
+}
+
+[dir="rtl"] .animate-shimmer {
+  animation-direction: reverse;
+}
+
+/* =========================================
+   Top progress bar during locale transitions
+   ========================================= */
+@keyframes progress-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(50%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.animate-progress-bar {
+  animation: progress-bar 1.2s ease-in-out infinite;
+}
+
+/* =========================================
+   Toast progress bar (used in CartContext)
+   ========================================= */
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-toast-progress {
+  animation: toast-progress 3.5s linear forwards;
 }
