@@ -1,52 +1,91 @@
-import { CartItem } from "@/types";
+import { CartItem } from '@/types';
 
+interface ShippingInfo {
+  cost: number;
+  region: string;
+  isFree: boolean;
+}
+
+/**
+ * Build a simple, friendly WhatsApp order message.
+ * - Shows the real shipping cost (or "Free" when the order qualifies).
+ * - Includes required customer details for delivery.
+ */
 export function buildOrderMessage(
   items: CartItem[],
   total: number,
-  locale: "ar" | "en" = "ar",
-  shipping?: { cost: number; region: string },
-) {
-  const currency = "AED";
-  const header =
-    locale === "ar"
-      ? "مرحباً، أريد الطلب عبر كتالوج حيب الفاخر:"
-      : "Hello, I would like to order from Heeb Catalog:";
+  locale: 'ar' | 'en' = 'ar',
+  shipping?: ShippingInfo,
+): string {
+  const isAr = locale === 'ar';
+  const currency = isAr ? 'د.إ' : 'AED';
 
+  // ---------- Items ----------
   const lines = items.map(
-    (i) =>
+    i =>
       `${i.quantity} × ${i.name} — ${(i.price * i.quantity).toFixed(2)} ${currency}`,
   );
 
-  const totalLabel = locale === "ar" ? "الإجمالي" : "Total";
-  const shippingLabel = locale === "ar" ? "التوصيل" : "Shipping";
-  const regionLabel = locale === "ar" ? "المنطقة" : "Region";
+  // ---------- Header ----------
+  const header = isAr
+    ? 'هلا يالغالي،\nأرغب في تأكيد الطلب التالي:'
+    : 'Hello,\nI would like to confirm the following order:';
 
-  const parts = [header, "", ...lines, ""];
-
+  // ---------- Shipping ----------
+  const shippingLines: string[] = [];
   if (shipping) {
-    parts.push(
-      `${shippingLabel}: ${
-        shipping.cost === 0
-          ? locale === "ar"
-            ? "مجاني"
-            : "Free"
-          : `${shipping.cost.toFixed(2)} ${currency}`
-      }`,
-      `${regionLabel}: ${shipping.region}`,
-    );
+    const shippingLabel = isAr ? 'التوصيل' : 'Shipping';
+
+    // ✅ Show "Free" when the order qualifies, otherwise show the cost
+    const shippingValue =
+      shipping.isFree || shipping.cost === 0
+        ? isAr
+          ? 'مجاني 🎉'
+          : 'Free 🎉'
+        : `${shipping.cost.toFixed(2)} ${currency}`;
+
+    shippingLines.push(`${shippingLabel}: ${shippingValue}`);
   }
 
-  parts.push(
-    "",
-    `${totalLabel}: ${total.toFixed(2)} ${currency}`,
-    "",
-    "+971 52 363 0501",
-  );
+  // ---------- Total ----------
+  const totalLine = `${isAr ? 'الإجمالي' : 'Total'}: ${total.toFixed(2)} ${currency}`;
 
-  return parts.join("\n");
+  // ---------- Customer info request ----------
+  const customerInfo = isAr
+    ? [
+        'لكي نكمل طلبك ممكن تعبولي البيانات:',
+        'الاسم:',
+        'الإمارة:',
+        'المنطقة:',
+        'رقم التواصل:',
+        'اللوكيشن (إجباري):',
+        'رقم الفيلا (مهم جدا):',
+      ].join('\n')
+    : [
+        'To complete your order, please provide the following:',
+        'Name:',
+        'Emirate:',
+        'Area:',
+        'Contact number:',
+        'Location (required):',
+        'Villa number (very important):',
+      ].join('\n');
+
+  // ---------- Compose ----------
+  return [
+    header,
+    '',
+    ...lines,
+    '',
+    ...shippingLines,
+    '',
+    totalLine,
+    '',
+    customerInfo,
+  ].join('\n');
 }
 
 export function whatsappLink(message: string) {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "971523630501";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '971523630501';
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }

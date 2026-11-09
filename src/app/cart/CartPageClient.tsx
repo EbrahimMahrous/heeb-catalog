@@ -30,28 +30,39 @@ export default function CartPageClient() {
 
   const [region, setRegion] = useState<Region>("standard");
 
+  // Restore the selected region on mount
   useEffect(() => {
     const saved = localStorage.getItem("heeb_region");
     if (saved === "western" || saved === "standard") setRegion(saved);
   }, []);
 
+  // Persist the selected region
   useEffect(() => {
     localStorage.setItem("heeb_region", region);
   }, [region]);
 
+  // Totals
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const shipping = calculateShipping(subtotal, region);
   const total = subtotal + shipping.cost;
 
+  // Free shipping progress
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const progressPercent = Math.min(
     100,
     (subtotal / FREE_SHIPPING_THRESHOLD) * 100,
   );
 
+  // ✅ Confirm order — pass full shipping info to WhatsApp message
   const onConfirm = () => {
     if (items.length === 0) return;
-    const msg = buildOrderMessage(items, total, locale);
+
+    const msg = buildOrderMessage(items, total, locale, {
+      cost: shipping.cost,
+      isFree: shipping.isFree,
+      region: region === "western" ? cart.regionWestern : cart.regionStandard,
+    });
+
     window.open(whatsappLink(msg), "_blank");
   };
 
@@ -60,6 +71,7 @@ export default function CartPageClient() {
   return (
     <div dir={isEn ? "ltr" : "rtl"} className="min-h-screen bg-neutral-50">
       <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+        {/* Back link */}
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-primary text-sm font-medium hover:underline"
@@ -68,6 +80,7 @@ export default function CartPageClient() {
           {cart.back}
         </Link>
 
+        {/* Title */}
         <h1 className="text-2xl sm:text-3xl font-black text-dark mt-3 mb-6">
           {cart.title}
           {!isEmpty && (
@@ -78,6 +91,7 @@ export default function CartPageClient() {
         </h1>
 
         {isEmpty ? (
+          /* ========== EMPTY CART ========== */
           <div className="text-center py-20 bg-white rounded-2xl border border-neutral-200">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-neutral-100 grid place-items-center">
               <ShoppingBag className="w-10 h-10 text-neutral-400" />
@@ -235,11 +249,11 @@ export default function CartPageClient() {
                     )}
                   </div>
 
-                  {/* Product info — unit price + quantity + line total (NO "unit" label) */}
+                  {/* Product info — unit price + quantity + line total */}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-dark truncate">{i.name}</p>
 
-                    {/* Unit price (without "per unit" label) */}
+                    {/* Unit price */}
                     <p className="text-xs text-neutral-500 mt-0.5">
                       {i.price.toFixed(2)} {common.currency}
                     </p>
