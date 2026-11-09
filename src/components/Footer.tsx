@@ -86,26 +86,26 @@ export default function Footer() {
     },
     {
       name: "Instagram",
-      href: "https://instagram.com/heebalfakher",
+      href: "https://www.instagram.com/heeb_alfakher?psln=cXhjM3M1dGV6azd6&utm_source=qr",
       Icon: InstagramIcon,
       hover:
         "hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#FD1D1D] hover:to-[#FCB045]",
     },
     {
       name: "Facebook",
-      href: "https://facebook.com/heebalfakher",
+      href: "https://www.facebook.com/share/1ZG1RVbh4W/?mibextid=LQQJ4d",
       Icon: FacebookIcon,
       hover: "hover:bg-[#1877F2]",
     },
     {
       name: "TikTok",
-      href: "https://tiktok.com/@heebalfakher",
+      href: "https://www.tiktok.com/@heeb_alfakher?_r=1",
       Icon: TikTokIcon,
       hover: "hover:bg-black",
     },
     {
       name: "Snapchat",
-      href: "https://snapchat.com/add/heebalfakher",
+      href: "https://snapchat.com/t/ybnG0zsK",
       Icon: SnapchatIcon,
       hover: "hover:bg-[#FFFC00] hover:text-black",
     },
