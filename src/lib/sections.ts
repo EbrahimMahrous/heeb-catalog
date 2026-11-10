@@ -1,5 +1,8 @@
 import { ApiCategory, ApiProduct, Locale, ProductSection } from "@/types";
-import { mapProduct } from "./product-mapper";
+import { mapProductList } from "./product-mapper";
+
+/** Products shown per section on first paint. */
+export const SECTION_INITIAL_BATCH = 8;
 
 // =========================================
 // Order the categories appear in
@@ -68,10 +71,13 @@ export function buildSections(
 
     if (catProducts.length === 0) continue;
 
+    const mapped = catProducts.map((p) => mapProductList(p, locale));
     sections.push({
       id: cat.id,
       title: locale === "ar" ? cat.name_ar : cat.name_en,
-      products: catProducts.map((p) => mapProduct(p, locale)),
+      // Only ship the first batch to the client — rest load on demand
+      products: mapped.slice(0, SECTION_INITIAL_BATCH),
+      totalCount: mapped.length,
     });
   }
 

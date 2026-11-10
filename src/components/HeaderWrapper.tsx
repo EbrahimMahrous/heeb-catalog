@@ -1,14 +1,16 @@
 "use client";
-import dynamic from "next/dynamic";
+import { Suspense } from "react";
+import Header from "@/components/Header";
 import { HeaderSkeleton } from "@/skeleton";
 
-// ✅ ssr:false is allowed here — this is a Client Component.
-// This avoids blocking prerendering of the entire app.
-const Header = dynamic(() => import("@/components/Header"), {
-  ssr: false,
-  loading: () => <HeaderSkeleton />,
-});
-
+/**
+ * Header uses useSearchParams — must be under Suspense for prerender.
+ * Still SSR'd (no ssr:false) so chrome HTML arrives without waiting on a JS chunk.
+ */
 export default function HeaderWrapper() {
-  return <Header />;
+  return (
+    <Suspense fallback={<HeaderSkeleton />}>
+      <Header />
+    </Suspense>
+  );
 }

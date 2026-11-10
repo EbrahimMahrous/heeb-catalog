@@ -1,13 +1,7 @@
 "use client";
-import dynamic from "next/dynamic";
-import { BrandHeaderSkeleton } from "@/skeleton";
+import BrandHeader from "@/components/BrandHeader";
 
-// ✅ Loaded client-side with a skeleton fallback
-const BrandHeader = dynamic(() => import("@/components/BrandHeader"), {
-  ssr: false,
-  loading: () => <BrandHeaderSkeleton />,
-});
-
+/** Keep as client island for locale hooks, but SSR HTML (no ssr:false). */
 export default function BrandHeaderLazy() {
   return <BrandHeader />;
 }

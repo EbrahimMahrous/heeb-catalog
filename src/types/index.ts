@@ -97,5 +97,8 @@ export interface CartItem {
 export interface ProductSection {
   id: number;
   title: string;
+  /** Initial batch only — remaining products load on demand. */
   products: Product[];
+  /** Total products in this category (for show-more). */
+  totalCount: number;
 }

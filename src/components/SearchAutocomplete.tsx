@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { Product } from "@/types";
@@ -156,10 +157,13 @@ export default function SearchAutocomplete({
               >
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-neutral-100 shrink-0">
                   {s.imageUrl ? (
-                    <img
+                    <Image
                       src={s.imageUrl}
                       alt=""
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="40px"
+                      quality={60}
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full grid place-items-center text-sm">

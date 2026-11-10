@@ -75,7 +75,7 @@ export default function Footer() {
   const { dict, isEn } = useLocale();
   const common = dict.common;
 
-  const logoSrc = isEn ? "/logo-heeb-ltr.svg" : "/logo-heeb-rtl.svg";
+  const logoSrc = isEn ? "/logo-heeb-ltr.webp" : "/logo-heeb-rtl.webp";
 
   const socialLinks = [
     {

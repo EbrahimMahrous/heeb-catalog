@@ -107,10 +107,13 @@ function SearchInput({
                   >
                     <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-neutral-100 shrink-0">
                       {s.imageUrl ? (
-                        <img
+                        <Image
                           src={s.imageUrl}
                           alt=""
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="40px"
+                          quality={60}
+                          className="object-cover"
                         />
                       ) : (
                         <div className="w-full h-full grid place-items-center text-sm">
@@ -306,7 +309,7 @@ export default function Header() {
     }
   };
 
-  const logoSrc = isEn ? "/logo-heeb-ltr.svg" : "/logo-heeb-rtl.svg";
+  const logoSrc = isEn ? "/logo-heeb-ltr.webp" : "/logo-heeb-rtl.webp";
 
   const sharedProps = {
     q,
@@ -337,8 +340,8 @@ export default function Header() {
           <Image
             src={logoSrc}
             alt={common.brandShort}
-            width={0}
-            height={0}
+            width={160}
+            height={56}
             className="h-10 sm:h-12 md:h-14 w-auto object-contain"
             priority
           />

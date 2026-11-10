@@ -1,11 +1,18 @@
 "use client";
+import Image from "next/image";
 import { Plus, PackageX } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useLocale } from "@/context/LocaleContext";
 import ReadMore from "./ReadMore";
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  priority?: boolean;
+}) {
   const { dict } = useLocale();
   const { add } = useCart();
   const common = dict.common;
@@ -13,15 +20,17 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="flex items-start gap-3 bg-white border border-neutral-200 rounded-xl p-2.5 hover:border-primary/40 hover:shadow-sm transition">
-      {/* Product image */}
+      {/* Product image — optimized ~80px thumb via next/image */}
       <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-neutral-100">
         {product.imageUrl ? (
-          <img
+          <Image
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
+            fill
+            sizes="80px"
+            quality={65}
+            priority={priority}
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full grid place-items-center text-2xl text-neutral-400">
@@ -37,20 +46,16 @@ export default function ProductCard({ product }: { product: Product }) {
 
       {/* Product details */}
       <div className="flex-1 min-w-0 flex flex-col justify-center self-stretch">
-        {/* Name */}
         <h3 className="font-bold text-dark text-sm leading-tight line-clamp-1">
           {product.name}
         </h3>
 
-        {/* Description */}
         {product.description && (
           <ReadMore text={product.description} maxLength={60} compact />
         )}
 
-        {/* Price + weight + add button */}
         <div className="flex items-center justify-between mt-1.5 gap-2">
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            {/* Price */}
             <span className="font-black text-primary text-sm whitespace-nowrap">
               {product.price.toFixed(2)}
               <span className="text-[10px] font-medium text-neutral-400 ms-1">
@@ -58,7 +63,6 @@ export default function ProductCard({ product }: { product: Product }) {
               </span>
             </span>
 
-            {/* Weight badge */}
             {product.weight && (
               <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-neutral-600 bg-neutral-100 rounded-full px-1.5 py-0.5 whitespace-nowrap">
                 ⚖️ {product.weight}
@@ -66,7 +70,6 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          {/* Add to cart */}
           <button
             onClick={() => add(product)}
             disabled={outOfStock}

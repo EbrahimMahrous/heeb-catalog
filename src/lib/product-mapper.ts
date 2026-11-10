@@ -56,6 +56,35 @@ export function mapProduct(p: ApiProduct, locale: Locale): Product {
   };
 }
 
+/** List/grid card — truncate description, drop unused EN description. */
+export function mapProductList(p: ApiProduct, locale: Locale): Product {
+  const full = mapProduct(p, locale);
+  return {
+    ...full,
+    description: full.description.slice(0, 80),
+    descriptionEn: "",
+  };
+}
+
+/** Autocomplete index — minimal fields for Header search. */
+export function mapProductSearch(p: ApiProduct, locale: Locale): Product {
+  const full = mapProduct(p, locale);
+  return {
+    id: full.id,
+    name: full.name,
+    nameEn: full.nameEn,
+    description: "",
+    descriptionEn: "",
+    price: full.price,
+    imageUrl: full.imageUrl,
+    isAvailable: full.isAvailable,
+    stock: 0,
+    categories: full.categories,
+    badge: null,
+    weight: full.weight,
+  };
+}
+
 /**
  * Keep only available products (status === 1).
  */

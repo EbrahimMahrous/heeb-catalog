@@ -43,7 +43,7 @@ export default function Loading() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 rounded-full bg-white border border-neutral-100 flex items-center justify-center shadow-md p-2">
               <Image
-                src="/logo-icon.svg"
+                src="/logo-icon.webp"
                 alt={common.brandShort}
                 width={48}
                 height={48}

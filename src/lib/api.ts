@@ -17,7 +17,7 @@ interface ApiResponse<T> {
  * Generic GET request to the Heeb API.
  * Adds the bearer token and revalidates the response.
  */
-async function apiGet<T>(path: string, revalidate = 120): Promise<T> {
+async function apiGet<T>(path: string, revalidate = 600): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: {
       Authorization: `Bearer ${TOKEN}`,

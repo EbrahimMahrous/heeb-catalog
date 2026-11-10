@@ -14,12 +14,11 @@ export default function BrandHeader() {
         {/* Logo */}
         <Link href="/" className="mb-3 block">
           <Image
-            src="/logo-icon.svg"
+            src="/logo-icon.webp"
             alt={common.brandShort}
             width={72}
             height={72}
             className="w-16 h-16 sm:w-18 sm:h-18 object-contain"
-            priority
           />
         </Link>
 

@@ -1,15 +1,14 @@
 import { Suspense } from "react";
 import BrandHeaderLazy from "@/components/BrandHeaderLazy";
 import CategoryNav from "@/components/CategoryNav";
-import CategorySection from "@/components/CategorySection";
-import ProductCard from "@/components/ProductCard";
+import CatalogSections from "@/components/CatalogSections";
+import SearchResults from "@/components/SearchResults";
 import {
   CatalogSkeleton,
   CategoryNavSkeleton,
-  BrandHeaderSkeleton,
 } from "@/skeleton";
 import { getCategories, getProducts } from "@/lib/api";
-import { filterAvailable, mapProduct } from "@/lib/product-mapper";
+import { filterAvailable, mapProductList } from "@/lib/product-mapper";
 import { buildSections, getVisibleCategories } from "@/lib/sections";
 import { searchProductsLocal, rankSearchResults } from "@/lib/search";
 import { getDict, getLocale } from "@/lib/locale";
@@ -18,15 +17,21 @@ interface Props {
   searchParams: Promise<{ q?: string; cat?: string }>;
 }
 
-// =========================================
-// Top-level Suspense — shows CatalogSkeleton
-// ONLY for the product grid area (below BrandHeader/CategoryNav).
-// =========================================
 export default async function Home({ searchParams }: Props) {
+  const locale = await getLocale();
+
+  // Brand chrome streams immediately — not blocked on product API
   return (
-    <Suspense fallback={<CatalogSkeleton />}>
-      <HomeContent searchParams={searchParams} />
-    </Suspense>
+    <div
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      className="min-h-screen bg-white flex flex-col"
+    >
+      <BrandHeaderLazy />
+
+      <Suspense fallback={<CatalogSkeleton />}>
+        <HomeContent searchParams={searchParams} />
+      </Suspense>
+    </div>
   );
 }
 
@@ -43,7 +48,7 @@ async function HomeContent({ searchParams }: Props) {
   ]);
 
   const allProducts = filterAvailable(rawProducts).map((p) =>
-    mapProduct(p, locale),
+    mapProductList(p, locale),
   );
   const visibleCats = getVisibleCategories(categories);
 
@@ -70,10 +75,7 @@ async function HomeContent({ searchParams }: Props) {
       : ranked;
 
     return (
-      <div
-        dir={locale === "ar" ? "rtl" : "ltr"}
-        className="min-h-screen bg-white flex flex-col"
-      >
+      <>
         <Suspense fallback={<CategoryNavSkeleton />}>
           <CategoryNav items={navItems} />
         </Suspense>
@@ -105,14 +107,10 @@ async function HomeContent({ searchParams }: Props) {
               <p className="text-xs text-neutral-400">{common.noResultsHint}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
-              {results.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            <SearchResults products={results} />
           )}
         </main>
-      </div>
+      </>
     );
   }
 
@@ -123,25 +121,14 @@ async function HomeContent({ searchParams }: Props) {
   const shownSections = activeCat
     ? allSections.filter((s) => String(s.id) === activeCat)
     : allSections;
-  const totalCount = shownSections.reduce(
-    (sum, s) => sum + s.products.length,
-    0,
-  );
+  const totalCount = shownSections.reduce((sum, s) => sum + s.totalCount, 0);
 
   return (
-    <div
-      dir={locale === "ar" ? "rtl" : "ltr"}
-      className="min-h-screen bg-white flex flex-col"
-    >
-      {/* BrandHeader — Client Component, has its own internal skeleton */}
-      <BrandHeaderLazy />
-
-      {/* CategoryNav — uses useSearchParams, needs Suspense */}
+    <>
       <Suspense fallback={<CategoryNavSkeleton />}>
         <CategoryNav items={navItems} />
       </Suspense>
 
-      {/* Product grid — main content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4">
         <div className="py-2.5 text-xs sm:text-sm text-neutral-500 border-b border-neutral-100">
           {common.total}{" "}
@@ -159,17 +146,20 @@ async function HomeContent({ searchParams }: Props) {
             {common.emptyProducts}
           </div>
         ) : (
-          <div className={activeCat ? "" : "divide-y divide-neutral-200"}>
-            {shownSections.map((section) => (
-              <CategorySection
-                key={section.id}
-                section={section}
-                hideHeader={!!activeCat}
-              />
-            ))}
-          </div>
+          <CatalogSections
+            sections={
+              // First 2 sections include products; later ones are metadata only
+              // so the RSC payload stays small on cold load.
+              activeCat
+                ? shownSections
+                : shownSections.map((s, i) =>
+                    i < 2 ? s : { ...s, products: [] },
+                  )
+            }
+            hideHeader={!!activeCat}
+          />
         )}
       </main>
-    </div>
+    </>
   );
 }
