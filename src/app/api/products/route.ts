@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { connection, NextRequest, NextResponse } from "next/server";
 import { getCategories, getProducts } from "@/lib/api";
 import {
   filterAvailable,
@@ -11,14 +11,17 @@ const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
 };
 
-function localeFromRequest(req: NextRequest): Locale {
-  return req.cookies.get("locale")?.value === "en" ? "en" : "ar";
+function localeFromQuery(searchParams: URLSearchParams): Locale {
+  return searchParams.get("locale") === "en" ? "en" : "ar";
 }
 
 export async function GET(req: NextRequest) {
+  // Request-time only — do not prerender this handler at build
+  await connection();
+
   try {
-    const locale = localeFromRequest(req);
     const { searchParams } = req.nextUrl;
+    const locale = localeFromQuery(searchParams);
     const categoryId = searchParams.get("categoryId");
     const offset = Math.max(0, Number(searchParams.get("offset") ?? 0) || 0);
     const limit = Math.min(

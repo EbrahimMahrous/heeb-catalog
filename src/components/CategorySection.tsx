@@ -17,8 +17,9 @@ export default function CategorySection({
   /** How many leading cards get next/image priority (above-the-fold only). */
   priorityCount?: number;
 }) {
-  const { dict } = useLocale();
+  const { dict, isEn } = useLocale();
   const common = dict.common;
+  const locale = isEn ? "en" : "ar";
   const [products, setProducts] = useState<Product[]>(section.products);
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -38,7 +39,7 @@ export default function CategorySection({
     try {
       const offset = products.length;
       const res = await fetch(
-        `/api/products?categoryId=${section.id}&offset=${offset}&limit=${LOAD_BATCH}`,
+        `/api/products?locale=${locale}&categoryId=${section.id}&offset=${offset}&limit=${LOAD_BATCH}`,
       );
       const data = await res.json();
       const next: Product[] = data.products ?? [];

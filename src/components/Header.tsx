@@ -181,7 +181,8 @@ export default function Header() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/products")
+    const locale = isEn ? "en" : "ar";
+    fetch(`/api/products?locale=${locale}`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) setProducts(data.products ?? []);
@@ -193,7 +194,7 @@ export default function Header() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isEn]);
 
   // Search state
   const [q, setQ] = useState("");

@@ -18,8 +18,9 @@ export default function CatalogSections({
   sections: ProductSection[];
   hideHeader?: boolean;
 }) {
-  const { dict } = useLocale();
+  const { dict, isEn } = useLocale();
   const common = dict.common;
+  const locale = isEn ? "en" : "ar";
 
   // Only keep the first N sections hydrated with products; rest are metadata
   const [loaded, setLoaded] = useState<ProductSection[]>(() =>
@@ -56,7 +57,7 @@ export default function CatalogSections({
       const nextSections = await Promise.all(
         batch.map(async (meta) => {
           const res = await fetch(
-            `/api/products?categoryId=${meta.id}&offset=0&limit=8`,
+            `/api/products?locale=${locale}&categoryId=${meta.id}&offset=0&limit=8`,
           );
           const data = await res.json();
           const products: Product[] = data.products ?? [];
@@ -75,7 +76,7 @@ export default function CatalogSections({
     } finally {
       setLoading(false);
     }
-  }, [loading, pending]);
+  }, [loading, pending, locale]);
 
   useEffect(() => {
     if (pending.length === 0) return;
