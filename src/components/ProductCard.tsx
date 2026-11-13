@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Plus, PackageX } from "lucide-react";
+import { Plus, Minus, PackageX } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useLocale } from "@/context/LocaleContext";
@@ -15,13 +15,26 @@ export default function ProductCard({
   priority?: boolean;
 }) {
   const { dict } = useLocale();
-  const { add } = useCart();
+  const { items, add, remove, setQty } = useCart();
   const common = dict.common;
+  const cartDict = dict.cart;
   const outOfStock = !product.isAvailable;
+
+  const cartItem = items.find((i) => i.id === product.id);
+  const quantity = cartItem?.quantity ?? 0;
+  const inCart = quantity > 0;
+
+  const handleDecrease = () => {
+    if (quantity <= 1) {
+      remove(product.id);
+    } else {
+      setQty(product.id, quantity - 1);
+    }
+  };
 
   return (
     <div className="flex items-center gap-3 bg-white border border-neutral-200 rounded-xl p-2.5 hover:border-primary/40 hover:shadow-sm transition">
-      {/* Product image — larger thumb, vertically centered */}
+      {/* Product image */}
       <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-100">
         {product.imageUrl ? (
           <Image
@@ -71,15 +84,42 @@ export default function ProductCard({
         </div>
       </div>
 
-      {/* Add to cart */}
-      <button
-        onClick={() => add(product)}
-        disabled={outOfStock}
-        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-primary hover:bg-primary/90 active:bg-primary/70 text-white rounded-md disabled:opacity-40 transition-all duration-150 active:scale-90 shrink-0"
-        aria-label={common.addToCart}
-      >
-        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-      </button>
+      {/* ===== Add / Quantity control — same style as cart page (smaller) ===== */}
+      {outOfStock ? (
+        <div className="flex items-center justify-center w-8 h-8 bg-neutral-100 text-neutral-400 rounded-full shrink-0">
+          <Plus className="w-4 h-4" />
+        </div>
+      ) : inCart ? (
+        // ✅ Same layout as the cart page quantity control, but compact
+        <div className="flex items-center border border-neutral-200 rounded-full shrink-0 overflow-hidden">
+          <button
+            onClick={handleDecrease}
+            className="px-2 py-1.5 hover:bg-neutral-100 active:bg-neutral-200 transition"
+            aria-label={cartDict.decrease}
+          >
+            <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+          </button>
+          <span className="w-7 text-center text-xs font-bold tabular-nums">
+            {quantity}
+          </span>
+          <button
+            onClick={() => add(product)}
+            className="px-2 py-1.5 hover:bg-neutral-100 active:bg-neutral-200 transition"
+            aria-label={cartDict.increase}
+          >
+            <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+          </button>
+        </div>
+      ) : (
+        // ✅ Same as before — single + button
+        <button
+          onClick={() => add(product)}
+          className="flex items-center justify-center w-9 h-9 bg-primary hover:bg-primary/90 active:scale-90 text-white rounded-full transition shrink-0"
+          aria-label={common.addToCart}
+        >
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   );
 }
