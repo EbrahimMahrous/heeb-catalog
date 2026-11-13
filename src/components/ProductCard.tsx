@@ -4,6 +4,7 @@ import { Plus, PackageX } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useLocale } from "@/context/LocaleContext";
+import { formatPrice } from "@/lib/format";
 import ReadMore from "./ReadMore";
 
 export default function ProductCard({
@@ -19,16 +20,16 @@ export default function ProductCard({
   const outOfStock = !product.isAvailable;
 
   return (
-    <div className="flex items-start gap-3 bg-white border border-neutral-200 rounded-xl p-2.5 hover:border-primary/40 hover:shadow-sm transition">
-      {/* Product image — optimized ~80px thumb via next/image */}
-      <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-neutral-100">
+    <div className="flex items-center gap-3 bg-white border border-neutral-200 rounded-xl p-2.5 hover:border-primary/40 hover:shadow-sm transition">
+      {/* Product image — larger thumb, vertically centered */}
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-100">
         {product.imageUrl ? (
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
-            sizes="80px"
-            quality={65}
+            sizes="(max-width: 640px) 80px, 96px"
+            quality={70}
             priority={priority}
             className="object-cover"
           />
@@ -54,32 +55,31 @@ export default function ProductCard({
           <ReadMore text={product.description} maxLength={60} compact />
         )}
 
-        <div className="flex items-center justify-between mt-1.5 gap-2">
-          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <span className="font-black text-primary text-sm whitespace-nowrap">
-              {product.price.toFixed(2)}
-              <span className="text-[10px] font-medium text-neutral-400 ms-1">
-                {common.currency}
-              </span>
+        <div className="flex items-center gap-1.5 mt-1.5 min-w-0 flex-wrap">
+          <span className="font-black text-primary text-sm whitespace-nowrap">
+            {formatPrice(product.price)}
+            <span className="text-[10px] font-medium text-neutral-400 ms-1">
+              {common.currency}
             </span>
+          </span>
 
-            {product.weight && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-neutral-600 bg-neutral-100 rounded-full px-1.5 py-0.5 whitespace-nowrap">
-                ⚖️ {product.weight}
-              </span>
-            )}
-          </div>
-
-          <button
-            onClick={() => add(product)}
-            disabled={outOfStock}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-primary hover:bg-primary/90 text-white rounded-md disabled:opacity-40 transition shrink-0"
-            aria-label={common.addToCart}
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+          {product.weight && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-neutral-600 bg-neutral-100 rounded-full px-1.5 py-0.5 whitespace-nowrap">
+              ⚖️ {product.weight}
+            </span>
+          )}
         </div>
       </div>
+
+      {/* Add to cart */}
+      <button
+        onClick={() => add(product)}
+        disabled={outOfStock}
+        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-primary hover:bg-primary/90 active:bg-primary/70 text-white rounded-md disabled:opacity-40 transition-all duration-150 active:scale-90 shrink-0"
+        aria-label={common.addToCart}
+      >
+        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+      </button>
     </div>
   );
 }

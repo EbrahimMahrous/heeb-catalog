@@ -2,6 +2,7 @@
 import { useCart } from "@/context/CartContext";
 import { useLocale } from "@/context/LocaleContext";
 import { buildOrderMessage, whatsappLink } from "@/lib/whatsapp";
+import { formatPrice } from "@/lib/format";
 import {
   Trash2,
   Minus,
@@ -53,7 +54,7 @@ export default function CartPageClient() {
     (subtotal / FREE_SHIPPING_THRESHOLD) * 100,
   );
 
-  // ✅ Confirm order — pass full shipping info to WhatsApp message
+  // Confirm order — pass full shipping info to WhatsApp message
   const onConfirm = () => {
     if (items.length === 0) return;
 
@@ -129,7 +130,7 @@ export default function CartPageClient() {
                     <span className="font-semibold text-primary text-sm">
                       {cart.freeProgress.replace(
                         "{amount}",
-                        remaining.toFixed(0),
+                        formatPrice(remaining),
                       )}
                     </span>
                   </>
@@ -145,7 +146,7 @@ export default function CartPageClient() {
               </div>
               <div className="flex justify-between text-[10px] text-neutral-500 mt-1">
                 <span>
-                  {subtotal.toFixed(0)} {common.currency}
+                  {formatPrice(subtotal)} {common.currency}
                 </span>
                 <span>
                   {progressPercent.toFixed(0)}% — {FREE_SHIPPING_THRESHOLD}{" "}
@@ -255,7 +256,7 @@ export default function CartPageClient() {
 
                     {/* Unit price */}
                     <p className="text-xs text-neutral-500 mt-0.5">
-                      {i.price.toFixed(2)} {common.currency}
+                      {formatPrice(i.price)} {common.currency}
                     </p>
 
                     {/* Line total: × quantity = total */}
@@ -265,7 +266,7 @@ export default function CartPageClient() {
                           × {i.quantity} =
                         </span>
                       )}
-                      {(i.price * i.quantity).toFixed(2)} {common.currency}
+                      {formatPrice(i.price * i.quantity)} {common.currency}
                     </p>
                   </div>
 
@@ -309,7 +310,7 @@ export default function CartPageClient() {
                 <div className="flex justify-between text-neutral-600">
                   <span>{cart.subtotal}</span>
                   <span className="font-semibold text-dark">
-                    {subtotal.toFixed(2)} {common.currency}
+                    {formatPrice(subtotal)} {common.currency}
                   </span>
                 </div>
                 <div className="flex justify-between text-neutral-600">
@@ -326,7 +327,7 @@ export default function CartPageClient() {
                   >
                     {shipping.isFree
                       ? cart.free
-                      : `${shipping.cost.toFixed(2)} ${common.currency}`}
+                      : `${formatPrice(shipping.cost)} ${common.currency}`}
                   </span>
                 </div>
                 <div className="border-t border-dashed border-neutral-200 pt-3 mt-1 flex justify-between items-center">
@@ -334,7 +335,7 @@ export default function CartPageClient() {
                     {cart.total}
                   </span>
                   <span className="font-black text-primary text-xl">
-                    {total.toFixed(2)} {common.currency}
+                    {formatPrice(total)} {common.currency}
                   </span>
                 </div>
               </div>

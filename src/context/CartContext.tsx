@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { Check, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 import { CartItem, Product, Locale } from "@/types";
 import { getDict } from "@/lib/i18n";
+import { formatPrice } from "@/lib/format";
+import { calculateShipping, Region } from "@/lib/shipping";
 
 interface CartCtx {
   items: CartItem[];
@@ -20,11 +22,12 @@ interface CartCtx {
   total: number;
   count: number;
   clear: () => void;
-  hydrated: boolean; // ✅ exposed to prevent hydration mismatches
+  hydrated: boolean;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
 const KEY = "heeb_cart_v1";
+const REGION_KEY = "heeb_region";
 
 /** Read locale from cookies (client-side). */
 function readLocale(): Locale {
@@ -33,11 +36,18 @@ function readLocale(): Locale {
   return isEn ? "en" : "ar";
 }
 
+/** Read the saved delivery region from localStorage. */
+function readRegion(): Region {
+  if (typeof window === "undefined") return "standard";
+  const saved = localStorage.getItem(REGION_KEY);
+  return saved === "western" ? "western" : "standard";
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  // Load cart from localStorage on mount.
+  // Load cart from localStorage on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
@@ -49,36 +59,60 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, []);
 
-  // Persist cart to localStorage after hydration.
+  // Persist cart to localStorage after hydration
   useEffect(() => {
     if (hydrated) localStorage.setItem(KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
   const add = useCallback((p: Product) => {
+    // Compute the updated cart inside the setter, then trigger the toast
+    // with the new totals (toast is a side-effect but needs the latest cart).
     setItems((prev) => {
       const found = prev.find((i) => i.id === p.id);
-      if (found) {
-        return prev.map((i) =>
-          i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i,
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: p.id,
-          name: p.name,
-          price: p.price,
-          imageUrl: p.imageUrl,
-          quantity: 1,
-        },
-      ];
-    });
+      const next = found
+        ? prev.map((i) =>
+            i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i,
+          )
+        : [
+            ...prev,
+            {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              imageUrl: p.imageUrl,
+              quantity: 1,
+            },
+          ];
 
-    // Show a custom success toast with locale-aware text.
+      // Show the toast on the next tick so React can re-render first.
+      setTimeout(() => showAddToast(p, next), 0);
+
+      return next;
+    });
+  }, []);
+
+  /** Show the "added to cart" toast with a full order summary. */
+  const showAddToast = (p: Product, nextItems: CartItem[]) => {
     const locale = readLocale();
     const dict = getDict(locale, "common");
+    const cartDict = getDict(locale, "cart");
     const isEn = locale === "en";
     const ArrowIcon = isEn ? ArrowRight : ArrowLeft;
+
+    // Compute totals from the updated cart
+    const subtotal = nextItems.reduce(
+      (sum, i) => sum + i.price * i.quantity,
+      0,
+    );
+    const region = readRegion();
+    const shipping = calculateShipping(subtotal, region);
+    const total = subtotal + shipping.cost;
+
+    // Labels
+    const subtotalLabel = cartDict.subtotal;
+    const shippingLabel = cartDict.shipping;
+    const totalLabel = cartDict.total;
+    const freeLabel = cartDict.free;
 
     toast.custom(
       (toastId) => (
@@ -86,8 +120,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
           dir={isEn ? "ltr" : "rtl"}
           className="w-[calc(100vw-24px)] max-w-105 bg-white rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-neutral-100 overflow-hidden"
         >
+          {/* ===== Header ===== */}
           <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
-            {/* Right: check icon + text */}
+            {/* Right: check icon + product info */}
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <div className="relative shrink-0">
                 <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
@@ -108,7 +143,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     {p.name}
                   </p>
                   <span className="text-[10px] sm:text-[11px] font-bold text-primary whitespace-nowrap">
-                    {p.price.toFixed(2)} {dict.currency}
+                    {formatPrice(p.price)} {dict.currency}
                   </span>
                 </div>
               </div>
@@ -132,6 +167,45 @@ export function CartProvider({ children }: { children: ReactNode }) {
             </button>
           </div>
 
+          {/* ===== Order summary ===== */}
+          <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-neutral-100">
+            <div className="space-y-1 pt-2">
+              {/* Subtotal */}
+              <div className="flex justify-between text-[11px] sm:text-xs text-neutral-600">
+                <span>{subtotalLabel}</span>
+                <span className="font-semibold text-dark">
+                  {formatPrice(subtotal)} {dict.currency}
+                </span>
+              </div>
+
+              {/* Shipping */}
+              <div className="flex justify-between text-[11px] sm:text-xs text-neutral-600">
+                <span>{shippingLabel}</span>
+                <span
+                  className={
+                    shipping.isFree
+                      ? "font-bold text-green-600"
+                      : "font-semibold text-dark"
+                  }
+                >
+                  {shipping.isFree
+                    ? freeLabel
+                    : `${formatPrice(shipping.cost)} ${dict.currency}`}
+                </span>
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center pt-1.5 mt-1 border-t border-dashed border-neutral-200">
+                <span className="font-bold text-dark text-[12px] sm:text-[13px]">
+                  {totalLabel}
+                </span>
+                <span className="font-black text-primary text-sm sm:text-base">
+                  {formatPrice(total)} {dict.currency}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Progress bar */}
           <div className="h-1 bg-neutral-100">
             <div className="h-full bg-primary animate-toast-progress" />
@@ -140,7 +214,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       ),
       { duration: 3500 },
     );
-  }, []);
+  };
 
   const remove = useCallback((id: number) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
